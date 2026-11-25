@@ -1,0 +1,25 @@
+# Web / API
+fastapi==0.121.*
+uvicorn[standard]==0.38.*
+pydantic==2.12.*
+pydantic-settings==2.12.*
+httpx==0.28.*
+sse-starlette==3.0.*
+
+# Storage / infra
+psycopg[binary,pool]==3.2.*
+pgvector==0.4.*
+numpy==2.*
+redis==7.0.*
+minio==7.2.*
+
+# Parsing
+pymupdf==1.26.*
+python-docx==1.2.*
+openpyxl==3.1.*
+python-pptx==1.0.*
+
+# Tokenization / reranking (local)
+tokenizers==0.22.*
+transformers==4.57.*
+torch==2.9.*

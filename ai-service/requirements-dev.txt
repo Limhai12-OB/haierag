@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest==8.4.*
+pytest-asyncio==1.2.*
+reportlab==4.4.*

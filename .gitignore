@@ -1,0 +1,36 @@
+.env
+.env.*
+!.env.example
+.DS_Store
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# java
+backend/target/
+# node
+node_modules/
+frontend/.next/
+frontend/out/
+# local data
+.data/
+*.log
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+# tests / coverage
+coverage/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+# secrets & keys (never commit)
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+# model caches
+.cache/

@@ -1,0 +1,1091 @@
+{
+  "ingest_seconds": 0.3,
+  "rows": [
+    {
+      "id": "en1",
+      "lang": "en",
+      "category": "fact",
+      "question": "How many days of paid annual leave do full-time employees receive?",
+      "fused": {
+        "latency_ms": 44.6,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 7709.5,
+        "n": 2,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.9976949095726013,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "Full-time employees receive 21 days of paid annual leave per calendar year [1][2].",
+        "e2e_ms": 20388,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 32.9,
+          "vector": 13.0,
+          "keyword": 3.6,
+          "rerank": 934.2,
+          "retrieval_total": 984.0,
+          "generation_queue": 0.0,
+          "generation": 19398.3,
+          "first_token": 18567.8,
+          "total": 20387.3
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 0.5
+      }
+    },
+    {
+      "id": "en2",
+      "lang": "en",
+      "category": "fact",
+      "question": "Which VPN client is required for remote access?",
+      "fused": {
+        "latency_ms": 44.0,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.03252247488101534,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1193.1,
+        "n": 1,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.9462003111839294,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The required VPN client for remote access is WireGuard. This is specified in the Information Security section of the company handbook, which states that \"All remote access to company systems must use the WireGuard VPN client issued by the IT department\" [1].",
+        "e2e_ms": 9803,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 25.3,
+          "vector": 6.7,
+          "keyword": 2.6,
+          "rerank": 946.8,
+          "retrieval_total": 981.5,
+          "generation_queue": 0.0,
+          "generation": 8811.3,
+          "first_token": 7347.7,
+          "total": 9803.1
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "en3",
+      "lang": "en",
+      "category": "fact",
+      "question": "How long is parental leave for the primary caregiver?",
+      "fused": {
+        "latency_ms": 49.6,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1194.1,
+        "n": 1,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.9858821630477905,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "Parental leave for the primary caregiver is 90 calendar days [1].",
+        "e2e_ms": 10039,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 20.7,
+          "vector": 2.4,
+          "keyword": 1.0,
+          "rerank": 919.9,
+          "retrieval_total": 944.1,
+          "generation_queue": 0.0,
+          "generation": 9093.7,
+          "first_token": 8540.6,
+          "total": 10039.2
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "en4",
+      "lang": "en",
+      "category": "fact",
+      "question": "When must expense receipts be submitted?",
+      "fused": {
+        "latency_ms": 31.3,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1240.1,
+        "n": 1,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.7682119011878967,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "Expense receipts must be submitted within 30 days of returning from a trip [1].",
+        "e2e_ms": 12707,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 24.8,
+          "vector": 6.4,
+          "keyword": 2.6,
+          "rerank": 933.2,
+          "retrieval_total": 967.1,
+          "generation_queue": 0.0,
+          "generation": 11735.4,
+          "first_token": 11205.1,
+          "total": 12707.3
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "tb1",
+      "lang": "en",
+      "category": "table",
+      "question": "What is the hotel limit per night in Singapore?",
+      "fused": {
+        "latency_ms": 34.5,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.03252247488101534,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1012.0,
+        "n": 1,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.5947866439819336,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The hotel limit per night in Singapore is 260 USD [1].",
+        "e2e_ms": 10325,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 21.0,
+          "vector": 3.7,
+          "keyword": 2.5,
+          "rerank": 925.7,
+          "retrieval_total": 953.0,
+          "generation_queue": 0.0,
+          "generation": 9371.5,
+          "first_token": 8866.2,
+          "total": 10325.1
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "tb2",
+      "lang": "en",
+      "category": "table",
+      "question": "What is the unit price of the Lidar Sensor 10?",
+      "fused": {
+        "latency_ms": 30.7,
+        "n": 5,
+        "top_doc": "price_list.csv",
+        "top_score": 0.03252247488101534,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1225.9,
+        "n": 1,
+        "top_doc": "price_list.csv",
+        "top_score": 0.7583316564559937,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The unit price of the Lidar Sensor 10 is 1450 USD [1].",
+        "e2e_ms": 11799,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 21.2,
+          "vector": 6.0,
+          "keyword": 3.2,
+          "rerank": 984.3,
+          "retrieval_total": 1014.7,
+          "generation_queue": 0.0,
+          "generation": 10783.0,
+          "first_token": 10152.5,
+          "total": 11799.3
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "tb3",
+      "lang": "en",
+      "category": "table",
+      "question": "Which product has a 36 month warranty?",
+      "fused": {
+        "latency_ms": 28.7,
+        "n": 5,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 0.5,
+        "ndcg": 0.6309297535714575
+      },
+      "reranked": {
+        "latency_ms": 1229.4,
+        "n": 1,
+        "top_doc": "price_list.csv",
+        "top_score": 0.15869517624378204,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The product with a 36-month warranty is the Motion Controller 500 (product code NR-CTL-500) [1].",
+        "e2e_ms": 12869,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 20.9,
+          "vector": 6.2,
+          "keyword": 1.7,
+          "rerank": 1006.5,
+          "retrieval_total": 1035.4,
+          "generation_queue": 0.0,
+          "generation": 11832.0,
+          "first_token": 10888.1,
+          "total": 12868.9
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "lg1",
+      "lang": "en",
+      "category": "long",
+      "question": "After how many operating hours must the AGV drive motor be replaced?",
+      "fused": {
+        "latency_ms": 55.5,
+        "n": 5,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1675.9,
+        "n": 1,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.9933589100837708,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The AGV drive motor must be replaced after 12,000 operating hours [1].",
+        "e2e_ms": 15782,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 50.7,
+          "vector": 6.9,
+          "keyword": 3.4,
+          "rerank": 1339.3,
+          "retrieval_total": 1400.4,
+          "generation_queue": 0.0,
+          "generation": 14350.9,
+          "first_token": 13720.8,
+          "total": 15781.2
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "lg2",
+      "lang": "en",
+      "category": "long",
+      "question": "At what charge level should AGV batteries be stored?",
+      "fused": {
+        "latency_ms": 46.5,
+        "n": 5,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1224.0,
+        "n": 1,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.9248236417770386,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "AGV batteries should be stored at 40 to 60 percent charge [1].",
+        "e2e_ms": 15104,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 20.0,
+          "vector": 6.2,
+          "keyword": 2.9,
+          "rerank": 917.4,
+          "retrieval_total": 946.6,
+          "generation_queue": 0.0,
+          "generation": 14148.6,
+          "first_token": 13581.6,
+          "total": 15104.1
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "sm1",
+      "lang": "en",
+      "category": "similar",
+      "question": "What is the first response time for critical incidents on the Premium Support Plan?",
+      "fused": {
+        "latency_ms": 52.7,
+        "n": 5,
+        "top_doc": "support_premium.txt",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1281.8,
+        "n": 2,
+        "top_doc": "support_premium.txt",
+        "top_score": 0.9991238713264465,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The first response time for critical incidents on the Premium Support Plan is within 1 hour, available at any time of day [1].",
+        "e2e_ms": 13648,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 24.4,
+          "vector": 10.7,
+          "keyword": 3.1,
+          "rerank": 978.1,
+          "retrieval_total": 1016.3,
+          "generation_queue": 0.0,
+          "generation": 12617.6,
+          "first_token": 11767.6,
+          "total": 13647.5
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "sm2",
+      "lang": "en",
+      "category": "similar",
+      "question": "What is the first response time for critical incidents on the Standard Support Plan?",
+      "fused": {
+        "latency_ms": 63.3,
+        "n": 5,
+        "top_doc": "support_standard.txt",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1196.8,
+        "n": 2,
+        "top_doc": "support_standard.txt",
+        "top_score": 0.9985277652740479,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The first response time for critical incidents on the Standard Support Plan is within 8 business hours [1].",
+        "e2e_ms": 10742,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 25.5,
+          "vector": 11.5,
+          "keyword": 2.6,
+          "rerank": 963.9,
+          "retrieval_total": 1003.5,
+          "generation_queue": 0.0,
+          "generation": 9736.4,
+          "first_token": 9087.0,
+          "total": 10741.3
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "sm3",
+      "lang": "en",
+      "category": "similar",
+      "question": "What uptime does the Standard plan commit to?",
+      "fused": {
+        "latency_ms": 49.4,
+        "n": 5,
+        "top_doc": "support_standard.txt",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1205.3,
+        "n": 2,
+        "top_doc": "support_standard.txt",
+        "top_score": 0.9872773289680481,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The Standard Support Plan commits to 99.5% uptime per month [1].",
+        "e2e_ms": 9777,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 23.2,
+          "vector": 8.1,
+          "keyword": 2.7,
+          "rerank": 942.5,
+          "retrieval_total": 976.7,
+          "generation_queue": 0.0,
+          "generation": 8785.4,
+          "first_token": 8241.3,
+          "total": 9776.0
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "km1",
+      "lang": "km",
+      "category": "fact",
+      "question": "តើបុគ្គលិកពេញម៉ោងទទួលបានការឈប់សម្រាកប្រចាំឆ្នាំប៉ុន្មានថ្ងៃ?",
+      "fused": {
+        "latency_ms": 102.2,
+        "n": 5,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.02459016393442623,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1279.7,
+        "n": 3,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.9992296695709229,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "បុគ្គលិកពេញម៉ោងទទួលបានការឈប់សម្រាកប្រចាំឆ្នាំចំនួន ២១ ថ្ងៃ [1][2]",
+        "e2e_ms": 67797,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 25.6,
+          "vector": 2.7,
+          "keyword": 9.6,
+          "rerank": 976.6,
+          "retrieval_total": 1014.6,
+          "generation_queue": 0.0,
+          "generation": 66683.4,
+          "first_token": 63622.6,
+          "total": 67791.5
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 0.5
+      }
+    },
+    {
+      "id": "km2",
+      "lang": "km",
+      "category": "fact",
+      "question": "តើការឈប់សម្រាកឈឺអាចមានប៉ុន្មានថ្ងៃក្នុងមួយឆ្នាំ?",
+      "fused": {
+        "latency_ms": 159.0,
+        "n": 5,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.02459016393442623,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 2135.5,
+        "n": 2,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.9928508996963501,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "ការឈប់សម្រាកឈឺអាចមានបានដល់ ១០ ថ្ងៃក្នុងមួយឆ្នាំ [1][2]",
+        "e2e_ms": 50170,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 29.8,
+          "vector": 3.2,
+          "keyword": 9.9,
+          "rerank": 987.1,
+          "retrieval_total": 1030.1,
+          "generation_queue": 0.0,
+          "generation": 49110.2,
+          "first_token": 46732.6,
+          "total": 50169.8
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 0.5
+      }
+    },
+    {
+      "id": "km3",
+      "lang": "km",
+      "category": "fact",
+      "question": "តើម៉ោងធ្វើការធម្មតាចាប់ផ្តើមនៅម៉ោងប៉ុន្មាន?",
+      "fused": {
+        "latency_ms": 80.9,
+        "n": 5,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.02459016393442623,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1454.3,
+        "n": 1,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.9790757894515991,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "ម៉ោងធ្វើការធម្មតាចាប់ផ្តើមនៅម៉ោង ៨ ព្រឹក [1]",
+        "e2e_ms": 47378,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 21.2,
+          "vector": 9.3,
+          "keyword": 11.9,
+          "rerank": 865.4,
+          "retrieval_total": 908.0,
+          "generation_queue": 0.0,
+          "generation": 46445.9,
+          "first_token": 44503.4,
+          "total": 47377.2
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "km4",
+      "lang": "km",
+      "category": "fact",
+      "question": "តើប្រាក់រង្វាន់ប្រចាំឆ្នាំត្រូវបានបើកនៅខែណា?",
+      "fused": {
+        "latency_ms": 94.0,
+        "n": 5,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.02459016393442623,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1530.4,
+        "n": 1,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.9740919470787048,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "ខែធ្នូ [1]",
+        "e2e_ms": 59643,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 24.6,
+          "vector": 8.4,
+          "keyword": 15.8,
+          "rerank": 922.9,
+          "retrieval_total": 971.8,
+          "generation_queue": 0.0,
+          "generation": 58647.2,
+          "first_token": 58280.5,
+          "total": 59642.0
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "km5",
+      "lang": "km",
+      "category": "fact",
+      "question": "តើពាក្យសម្ងាត់ត្រូវផ្លាស់ប្តូររៀងរាល់ប៉ុន្មានថ្ងៃ?",
+      "fused": {
+        "latency_ms": 125.0,
+        "n": 5,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.02459016393442623,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1820.0,
+        "n": 1,
+        "top_doc": "km_hr_policy.md",
+        "top_score": 0.9162596464157104,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "ពាក្យសម្ងាត់ត្រូវផ្លាស់ប្តូររៀងរាល់ ៩០ ថ្ងៃ [1]",
+        "e2e_ms": 56406,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 65.4,
+          "vector": 7.5,
+          "keyword": 15.2,
+          "rerank": 1133.3,
+          "retrieval_total": 1222.7,
+          "generation_queue": 0.0,
+          "generation": 55163.6,
+          "first_token": 53403.3,
+          "total": 56404.6
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "mx1",
+      "lang": "mixed",
+      "category": "fact",
+      "question": "តើត្រូវប្រើកម្មវិធីអ្វីសម្រាប់ VPN?",
+      "fused": {
+        "latency_ms": 137.5,
+        "n": 5,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.03265468006345849,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 2007.7,
+        "n": 2,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.8698251843452454,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "ត្រូវប្រើកម្មវិធី WireGuard សម្រាប់ VPN [1][2]",
+        "e2e_ms": 50791,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 64.6,
+          "vector": 5.0,
+          "keyword": 12.3,
+          "rerank": 1257.8,
+          "retrieval_total": 1340.0,
+          "generation_queue": 0.0,
+          "generation": 49394.2,
+          "first_token": 48185.9,
+          "total": 50790.7
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 0.5
+      }
+    },
+    {
+      "id": "mx2",
+      "lang": "mixed",
+      "category": "fact",
+      "question": "តើ laptop ស្តង់ដារជាម៉ាកអ្វី?",
+      "fused": {
+        "latency_ms": 119.4,
+        "n": 5,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1816.4,
+        "n": 1,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.7903685569763184,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "Laptop ស្តង់ដារគឺ MacBook Air M3 [1]",
+        "e2e_ms": 38752,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 67.4,
+          "vector": 17.4,
+          "keyword": 27.0,
+          "rerank": 1372.5,
+          "retrieval_total": 1484.5,
+          "generation_queue": 0.0,
+          "generation": 37233.6,
+          "first_token": 36531.0,
+          "total": 38751.5
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "mx3",
+      "lang": "mixed",
+      "category": "fact",
+      "question": "Which authenticator app is used for MFA?",
+      "fused": {
+        "latency_ms": 106.6,
+        "n": 5,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.03057889822595705,
+        "recall": 0.0,
+        "hit": 0.0,
+        "precision": 0.0,
+        "rr": 0.0,
+        "ndcg": 0.0
+      },
+      "reranked": {
+        "latency_ms": 1833.4,
+        "n": 1,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.9577545523643494,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "The authenticator app used for MFA is Microsoft Authenticator [1].",
+        "e2e_ms": 23699,
+        "grounded": true,
+        "error": null,
+        "timings": {
+          "embed_query": 55.5,
+          "vector": 8.0,
+          "keyword": 3.0,
+          "rerank": 1272.9,
+          "retrieval_total": 1339.5,
+          "generation_queue": 0.0,
+          "generation": 22333.3,
+          "first_token": 21781.6,
+          "total": 23698.7
+        },
+        "answer_correct": 1.0,
+        "citation_accuracy": 1.0
+      }
+    },
+    {
+      "id": "mx4",
+      "lang": "mixed",
+      "category": "fact",
+      "question": "តើ printer នៅជាន់ទី ៣ មានឈ្មោះអ្វី?",
+      "fused": {
+        "latency_ms": 66.1,
+        "n": 5,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.03278688524590164,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "reranked": {
+        "latency_ms": 1154.7,
+        "n": 1,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.9827572107315063,
+        "recall": 1.0,
+        "hit": 1.0,
+        "precision": 0.2,
+        "rr": 1.0,
+        "ndcg": 1.0
+      },
+      "generation": {
+        "answer": "",
+        "e2e_ms": 68760,
+        "grounded": null,
+        "error": {
+          "code": "GENERATION_EMPTY",
+          "message": "The model produced no answer (it may have used its whole output budget on reasoning). Increase LLM_MAX_OUTPUT_TOKENS or ask a narrower question."
+        },
+        "timings": null,
+        "answer_correct": 0.0,
+        "citation_accuracy": 0.0
+      }
+    },
+    {
+      "id": "ab1",
+      "lang": "en",
+      "category": "absent",
+      "question": "What was Northwind's total revenue in 2023?",
+      "fused": {
+        "latency_ms": 82.8,
+        "n": 5,
+        "top_doc": "agv_manual.md",
+        "top_score": 0.032266458495966696
+      },
+      "reranked": {
+        "latency_ms": 1192.7,
+        "n": 0,
+        "top_doc": null,
+        "top_score": null
+      },
+      "generation": {
+        "answer": "The available documents do not contain enough information to answer this question. Try rephrasing the question, widening the chat scope, or uploading a document that covers this topic.",
+        "e2e_ms": 867,
+        "grounded": false,
+        "error": null,
+        "timings": {
+          "embed_query": 21.5,
+          "vector": 2.7,
+          "keyword": 1.6,
+          "rerank": 840.6,
+          "retrieval_total": 866.5
+        },
+        "correct_refusal": true
+      }
+    },
+    {
+      "id": "ab2",
+      "lang": "en",
+      "category": "absent",
+      "question": "What is the company's policy on bringing pets to the office?",
+      "fused": {
+        "latency_ms": 47.0,
+        "n": 5,
+        "top_doc": "en_handbook.pdf",
+        "top_score": 0.032266458495966696
+      },
+      "reranked": {
+        "latency_ms": 1052.5,
+        "n": 0,
+        "top_doc": null,
+        "top_score": null
+      },
+      "generation": {
+        "answer": "The available documents do not contain enough information to answer this question. Try rephrasing the question, widening the chat scope, or uploading a document that covers this topic.",
+        "e2e_ms": 938,
+        "grounded": false,
+        "error": null,
+        "timings": {
+          "embed_query": 25.5,
+          "vector": 4.9,
+          "keyword": 3.0,
+          "rerank": 904.3,
+          "retrieval_total": 937.8
+        },
+        "correct_refusal": true
+      }
+    },
+    {
+      "id": "ab3",
+      "lang": "km",
+      "category": "absent",
+      "question": "តើក្រុមហ៊ុនមានបុគ្គលិកប៉ុន្មាននាក់?",
+      "fused": {
+        "latency_ms": 47.1,
+        "n": 5,
+        "top_doc": "mixed_it_guide.md",
+        "top_score": 0.023122094445803768
+      },
+      "reranked": {
+        "latency_ms": 1143.9,
+        "n": 0,
+        "top_doc": null,
+        "top_score": null
+      },
+      "generation": {
+        "answer": "ឯកសារដែលមានមិនមានព័ត៌មានគ្រប់គ្រាន់ដើម្បីឆ្លើយសំណួរនេះទេ។ សូមសាកល្បងសួរម្ដងទៀតដោយប្រើពាក្យផ្សេង ពង្រីកវិសាលភាពនៃការសន្ទនា ឬផ្ទុកឯកសារដែលពាក់ព័ន្ធ។",
+        "e2e_ms": 998,
+        "grounded": false,
+        "error": null,
+        "timings": {
+          "embed_query": 24.4,
+          "vector": 5.1,
+          "keyword": 15.3,
+          "rerank": 952.9,
+          "retrieval_total": 997.7
+        },
+        "correct_refusal": true
+      }
+    }
+  ],
+  "k": 5,
+  "settings": {
+    "llm": "qwen3:4b",
+    "embedding": "bge-m3",
+    "reranker": "BAAI/bge-reranker-v2-m3",
+    "chunk_size": 800,
+    "overlap": 120,
+    "rrf_k": 60,
+    "retrieval_top_k": 20
+  }
+}

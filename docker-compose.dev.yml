@@ -1,0 +1,10 @@
+# Development override: publish infrastructure on 127.0.0.1 so services can run natively
+# (the AI service natively gets Apple Silicon MPS acceleration for the reranker).
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis storage
+services:
+  postgres:
+    ports: ["127.0.0.1:5432:5432"]
+  redis:
+    ports: ["127.0.0.1:6379:6379"]
+  storage:
+    ports: ["127.0.0.1:9000:9000"]
