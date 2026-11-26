@@ -159,6 +159,49 @@ public class AiClient {
         return new AiException(code, message);
     }
 
+    /** Content downloaded by the AI service for a link import. */
+    public record FetchedUrl(String url, String fileType, String contentType, String title, byte[] data) {
+    }
+
+    /**
+     * Asks the AI service to download a user-supplied link (it enforces the SSRF rules, ADR-018).
+     * Failures are thrown as {@link AiException} with codes URL_INVALID, URL_BLOCKED, URL_UNSUPPORTED,
+     * URL_TOO_LARGE, URL_FETCH_FAILED or AI_UNAVAILABLE.
+     */
+    public FetchedUrl fetchUrl(String url, long maxBytes) {
+        HttpRequest req = HttpRequest.newBuilder(URI.create(base() + "/internal/v1/fetch-url"))
+                .timeout(java.time.Duration.ofSeconds(60))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("X-Internal-Token", cfg.internalToken() == null ? "" : cfg.internalToken())
+                .POST(HttpRequest.BodyPublishers.ofByteArray(mapper.writeValueAsBytes(
+                        Map.of("url", url, "maxBytes", maxBytes))))
+                .build();
+        HttpResponse<InputStream> resp;
+        try {
+            resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (IOException e) {
+            log.warn("AI service unreachable for link import: {}", e.toString());
+            throw new AiException("AI_UNAVAILABLE", "The AI service is unavailable. Is it running?");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AiException("AI_UNAVAILABLE", "Interrupted while contacting the AI service");
+        }
+        try (InputStream body = resp.body()) {
+            if (resp.statusCode() != 200) {
+                throw errorFromResponse(resp.statusCode(), body);
+            }
+            Map<String, Object> m = mapper.readValue(body, MAP);
+            byte[] data = java.util.Base64.getDecoder().decode(String.valueOf(m.get("data")));
+            return new FetchedUrl(String.valueOf(m.get("url")), String.valueOf(m.get("fileType")),
+                    String.valueOf(m.get("contentType")), m.get("title") instanceof String t ? t : "", data);
+        } catch (AiException e) {
+            throw e;
+        } catch (IOException | RuntimeException e) {
+            throw new AiException("AI_ERROR", "The AI service returned an invalid link-import response");
+        }
+    }
+
     /** GET /health with a short timeout. Never throws. */
     public Map<String, Object> health() {
         HttpRequest req = HttpRequest.newBuilder(URI.create(base() + "/health"))

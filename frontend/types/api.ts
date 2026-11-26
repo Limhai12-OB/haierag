@@ -93,7 +93,8 @@ export type DocumentStatus = "UPLOADED" | "QUEUED" | "PROCESSING" | "COMPLETED" 
 
 export const DOCUMENT_STATUSES: DocumentStatus[] = ["UPLOADED", "QUEUED", "PROCESSING", "COMPLETED", "FAILED"];
 
-export type FileType = "PDF" | "DOCX" | "XLSX" | "PPTX" | "TXT" | "MARKDOWN" | "CSV";
+/** HTML = a web page imported from a link. */
+export type FileType = "PDF" | "DOCX" | "XLSX" | "PPTX" | "TXT" | "MARKDOWN" | "CSV" | "HTML";
 
 export type Document = {
   id: string;
@@ -110,6 +111,8 @@ export type Document = {
   pageCount: number | null;
   chunkCount: number;
   uploadedBy: string | null;
+  /** Final URL the content was imported from; null for uploaded files. */
+  sourceUrl: string | null;
   processedAt: string | null;
   createdAt: string;
   updatedAt: string;

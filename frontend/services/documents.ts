@@ -19,6 +19,20 @@ export function uploadDocument(workspaceId: string, file: File, collectionId?: s
   return api<Document>(`/workspaces/${workspaceId}/documents`, { method: "POST", body: form, signal });
 }
 
+/** Imports a web page or linked file; the server downloads it (public addresses only) and queues processing. */
+export function importDocumentUrl(
+  workspaceId: string,
+  url: string,
+  collectionId?: string | null,
+  signal?: AbortSignal,
+) {
+  return api<Document>(`/workspaces/${workspaceId}/documents/import-url`, {
+    method: "POST",
+    body: { url, collectionId: collectionId ?? null },
+    signal,
+  });
+}
+
 export const getDocument = (id: string) => api<Document>(`/documents/${id}`);
 export const getDocumentStatus = (id: string) => api<DocumentStatusInfo>(`/documents/${id}/status`);
 export const patchDocument = (id: string, body: DocumentPatch) =>

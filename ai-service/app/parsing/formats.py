@@ -312,6 +312,43 @@ class MarkdownParser:
         return ParsedDocument(segments=segments)
 
 
+# --------------------------------------------------------------------------------------------------------- HTML
+# Wiki "[edit]" links and footnote markers ("[4]", "[citation needed]"); footnote numbers would also be
+# confused with HaieRag's own [n] source citations.
+_WEB_NOISE = re.compile(r"\[(?:edit|\d{1,3}|[a-z]|citation needed|note \d+)\]", re.IGNORECASE)
+
+
+@register("HTML")
+class HtmlParser:
+    """Web pages imported from a link, parsed as markdown so headings and tables survive.
+
+    Two extractions: trafilatura's main-article content (clean for news/wiki/blog pages) and a structural
+    full-page walk (html_blocks). If the article extractor captured less than half of the page's visible text —
+    typical for one-page sites such as portfolios, landing and product pages — the full-page version is used.
+    """
+
+    MIN_CHARS = 40
+    ARTICLE_MIN_SHARE = 0.5
+
+    def parse(self, data: bytes, filename: str) -> ParsedDocument:
+        import trafilatura
+
+        from app.parsing.html_blocks import page_markdown, visible_text_length
+
+        article = trafilatura.extract(data, output_format="markdown", include_tables=True, include_links=False,
+                                      include_images=False, include_comments=False, favor_recall=True) or ""
+        full = page_markdown(data)
+        article_len, full_len = visible_text_length(article), visible_text_length(full)
+        use_full = full_len > 0 and article_len < self.ARTICLE_MIN_SHARE * full_len
+        markdown = _WEB_NOISE.sub("", full if use_full else article)
+        if len(markdown.strip()) < self.MIN_CHARS:
+            raise DocumentParseError("No readable text was found on this web page. It may need JavaScript or a "
+                                     "login; try saving it as a PDF and uploading that instead.")
+        parsed = MarkdownParser().parse(markdown.encode("utf-8"), filename)
+        parsed.metadata["extraction"] = "full_page" if use_full else "article"
+        return parsed
+
+
 # ---------------------------------------------------------------------------------------------------------- CSV
 @register("CSV")
 class CsvParser:

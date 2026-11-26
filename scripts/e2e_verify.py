@@ -62,6 +62,7 @@ def ask(client: httpx.Client, conv_id: str, question: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8080")
+    ap.add_argument("--online", action="store_true", help="also import a public web page (needs internet)")
     args = ap.parse_args()
     api = f"{args.base}/api/v1"
     c = httpx.Client(base_url=api, timeout=60)
@@ -95,6 +96,20 @@ def main() -> int:
           f"{r.status_code} {json.dumps(doc)[:200]}")
     r = c.post(f"/workspaces/{ws['id']}/documents", files={"file": ("evil.pdf", b"MZ\x90\x00 not a pdf", "application/pdf")})
     check("upload with wrong magic bytes rejected", r.status_code == 415, str(r.status_code))
+
+    # 4b. link import: internal/private targets must be refused (SSRF), never fetched
+    for target in ("http://host.docker.internal:11434/api/tags", "http://localhost:8080/actuator/health",
+                   "http://postgres:5432/", "http://169.254.169.254/latest/meta-data/", "http://[::1]:6379/",
+                   "file:///etc/passwd"):
+        r = c.post(f"/workspaces/{ws['id']}/documents/import-url", json={"url": target})
+        reason = (r.json().get("errors") or {}).get("url", "") if r.headers.get("content-type", "").find("json") >= 0 else ""
+        check(f"link import refused: {target}", r.status_code == 400 and bool(reason), f"{r.status_code} {reason}")
+    if args.online:
+        r = c.post(f"/workspaces/{ws['id']}/documents/import-url",
+                   json={"url": "https://en.wikipedia.org/wiki/Angkor_Wat", "collectionId": col["id"]})
+        web = r.json()
+        check("public web page imported", r.status_code == 202 and web.get("fileType") == "HTML"
+              and web.get("sourceUrl", "").startswith("https://en.wikipedia.org/"), f"{r.status_code} {json.dumps(web)[:200]}")
 
     # 5. wait for ingestion
     t0, status = time.time(), None

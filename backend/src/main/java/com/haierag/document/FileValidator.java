@@ -38,6 +38,7 @@ public class FileValidator {
                 case XLSX -> isOoxml(file, "xl/workbook.xml", "xl/");
                 case PPTX -> isOoxml(file, "ppt/presentation.xml", "ppt/");
                 case TXT, MARKDOWN, CSV -> isUtf8Text(file);
+                case HTML -> false; // only produced by link import, never by an upload
             };
             if (!ok) {
                 throw unsupported("File content does not match its ." + extension(originalFilename) + " extension");

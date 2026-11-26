@@ -45,6 +45,13 @@ class Settings(BaseSettings):
 
     internal_api_token: str = ""
 
+    # --- URL import (ADR-018) ---
+    # Links resolving to private/loopback/link-local addresses are refused (SSRF protection). Set true only on a
+    # trusted network where importing intranet pages is intended.
+    url_import_allow_private: bool = False
+    url_import_timeout_seconds: float = 20.0
+    url_import_max_redirects: int = 5
+
     # --- Ollama ---
     ollama_base_url: str = "http://localhost:11434"
     ollama_keep_alive: str = "5m"

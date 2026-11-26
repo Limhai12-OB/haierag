@@ -43,7 +43,9 @@ describe("UploadDropzone", () => {
     const upload = vi
       .fn()
       .mockResolvedValueOnce({ id: "ok" })
-      .mockRejectedValueOnce(new ApiError(415, { title: "Unsupported Media Type", detail: "File content does not match .pdf" }));
+      .mockRejectedValueOnce(
+        new ApiError(415, { title: "Unsupported Media Type", detail: "File content does not match .pdf" }),
+      );
     setup(upload);
     drop([fileOfSize("good.md", 10), fileOfSize("fake.pdf", 10)]);
     await waitFor(() => expect(upload).toHaveBeenCalledTimes(2));
@@ -57,5 +59,62 @@ describe("UploadDropzone", () => {
     const input = screen.getByLabelText("Choose files to upload");
     expect(input.getAttribute("accept")).toContain(".pdf");
     expect(input.getAttribute("accept")).toContain(".csv");
+  });
+});
+
+describe("UploadDropzone — import from link", () => {
+  function setupLink(importUrl: ReturnType<typeof vi.fn>) {
+    const qc = new QueryClient();
+    render(
+      <QueryClientProvider client={qc}>
+        <UploadDropzone
+          workspaceId="ws1"
+          collections={[]}
+          defaultCollectionId="col1"
+          upload={vi.fn()}
+          importUrl={importUrl as never}
+        />
+      </QueryClientProvider>,
+    );
+    return screen.getByLabelText("Link to a web page or file");
+  }
+
+  it("imports a link into the selected collection and shows the page title", async () => {
+    const importUrl = vi
+      .fn()
+      .mockResolvedValue({ id: "d1", name: "Angkor Wat - Wikipedia", sizeBytes: 2048 } as Document);
+    const input = setupLink(importUrl);
+    fireEvent.change(input, { target: { value: "  https://en.wikipedia.org/wiki/Angkor_Wat " } });
+    fireEvent.click(screen.getByRole("button", { name: /Import link/ }));
+    await waitFor(() =>
+      expect(importUrl).toHaveBeenCalledWith("ws1", "https://en.wikipedia.org/wiki/Angkor_Wat", "col1"),
+    );
+    expect(await screen.findByText("Angkor Wat - Wikipedia")).toBeInTheDocument();
+    expect(screen.getByText("Downloaded · queued for processing")).toBeInTheDocument();
+    expect(input).toHaveValue("");
+  });
+
+  it("rejects non-http links client-side", async () => {
+    const importUrl = vi.fn();
+    const input = setupLink(importUrl);
+    fireEvent.change(input, { target: { value: "javascript:alert(1)" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(await screen.findByText("Enter a full link starting with https:// or http://")).toBeInTheDocument();
+    expect(importUrl).not.toHaveBeenCalled();
+  });
+
+  it("shows the server's reason when a link is refused and keeps the link for editing", async () => {
+    const importUrl = vi.fn().mockRejectedValue(
+      new ApiError(400, {
+        title: "Bad Request",
+        detail: "Validation failed",
+        errors: { url: "Links to local or private network addresses are not allowed." },
+      }),
+    );
+    const input = setupLink(importUrl);
+    fireEvent.change(input, { target: { value: "http://192.168.1.1/admin" } });
+    fireEvent.click(screen.getByRole("button", { name: /Import link/ }));
+    expect(await screen.findByText("Links to local or private network addresses are not allowed.")).toBeInTheDocument();
+    expect(input).toHaveValue("http://192.168.1.1/admin");
   });
 });

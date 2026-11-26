@@ -52,6 +52,11 @@ class EmbeddingRequest(CamelModel):
     texts: list[str] = Field(min_length=1, max_length=64)
 
 
+class FetchUrlRequest(CamelModel):
+    url: str = Field(min_length=1, max_length=2048)
+    max_bytes: int = Field(ge=1, le=1024 * 1024 * 1024)
+
+
 def _http_error(exc: HaieRagError) -> HTTPException:
     return HTTPException(exc.status_code, {"code": exc.code, "message": exc.message})
 
@@ -121,3 +126,16 @@ async def config(request: Request) -> dict:
         "chunk_size", "chunk_overlap", "max_parallel_inference",
     ]
     return {to_camel(k): getattr(s, k) for k in keys}
+
+
+@router.post("/fetch-url")
+async def fetch_url_endpoint(body: FetchUrlRequest, request: Request) -> dict:
+    """Downloads a user-supplied link with SSRF protection (ADR-018); the backend stores it like an upload."""
+    import base64
+
+    from app.web.fetcher import fetch_url
+
+    # UrlImportError propagates to the domain-error handler: 422 problem+json with a stable `code`.
+    page = await fetch_url(body.url, request.app.state.container.settings, body.max_bytes)
+    return {"url": page.url, "fileType": page.file_type, "contentType": page.content_type, "title": page.title,
+            "sizeBytes": len(page.data), "data": base64.b64encode(page.data).decode("ascii")}

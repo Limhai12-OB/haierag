@@ -5,10 +5,15 @@ Strategy
    at sentence boundaries (Latin `.!?`, Khmer `។ ៕`, newlines); a single over-long sentence is split by tokens.
 2. Units are packed greedily into chunks of at most `chunk_size` tokens.
 3. A new section heading closes the current chunk once it holds at least `min_tokens`, so chunks rarely span
-   sections; tiny sections are merged forward instead of producing fragments.
+   sections; tiny sections are merged forward instead of producing fragments. Subsections (a heading *deeper*
+   than the section the chunk started in) do not close it: they are packed with their parent section while it
+   fits, so "list all X" questions find all items of a section in one chunk. A heading level used only once at
+   the top of the document (a page/document title) does not count as a section root. Headings without a level
+   (some PDFs) always act as boundaries.
 4. Overlap: the next chunk starts with trailing *sentences* (never partial sentences) of the previous chunk,
    up to `overlap` tokens, but only within the same section.
-Every chunk keeps page range and section heading for citations.
+Every chunk keeps page range and section heading for citations, plus the heading path
+("Projects › More projects › Gamma") in metadata, which is embedded with the chunk.
 """
 
 from __future__ import annotations
@@ -46,6 +51,9 @@ class _Unit:
     heading: str | None
     kind: str
     sentences: list[str] | None = None  # for overlap
+    level: int | None = None            # heading units only
+    path: tuple[str, ...] = ()          # heading path (outermost first)
+    section_level: int | None = None    # level of the innermost heading this unit belongs to
 
 
 @dataclass
@@ -66,7 +74,7 @@ def split_sentences(text: str) -> list[str]:
 
 
 class StructuredChunker:
-    name = "structured-v1"
+    name = "structured-v2"
 
     def __init__(self, counter: TokenCounter, config: ChunkingConfig):
         self.counter = counter
@@ -102,14 +110,24 @@ class StructuredChunker:
                 out.append(p)
         return out
 
-    def _units(self, segments: list[Segment]) -> list[_Unit | Segment]:
-        """Returns units interleaved with heading segments (which act as boundaries)."""
+    def _units(self, segments: list[Segment]) -> list[_Unit]:
+        """Returns content units interleaved with heading units (which may act as boundaries)."""
         out: list[_Unit | Segment] = []
         heading: str | None = None
+        stack: list[tuple[int | None, str]] = []
+        path: tuple[str, ...] = ()
         for seg in segments:
             if seg.kind == "heading":
                 heading = seg.text
-                out.append(seg)
+                if seg.level is None:
+                    stack = [(None, seg.text)]
+                else:
+                    while stack and (stack[-1][0] is None or stack[-1][0] >= seg.level):
+                        stack.pop()
+                    stack.append((seg.level, seg.text))
+                path = tuple(t if len(t) <= 80 else t[:79] + "…" for _, t in stack)
+                out.append(_Unit(seg.text, self.counter.count(seg.text), seg.page, seg.text, "heading",
+                                 level=seg.level, path=path))
                 continue
             if seg.kind == "table":
                 tokens = self.counter.count(seg.text)
@@ -158,6 +176,17 @@ class StructuredChunker:
                     out.append(_Unit(text, self.counter.count(text), seg.page, heading, "text", list(cur_s)))
         return out
 
+    def _with_paths(self, segments: list[Segment]) -> list[_Unit]:
+        """Units with the heading path of the section they belong to."""
+        units = self._units(segments)
+        path: tuple[str, ...] = ()
+        level: int | None = None
+        for u in units:
+            if u.kind == "heading":
+                path, level = u.path, u.level
+            u.path, u.section_level = path, level
+        return units
+
     # ------------------------------------------------------------------ packing
     def chunk(self, segments: list[Segment]) -> list[Chunk]:
         cfg, count = self.cfg, self.counter.count
@@ -175,6 +204,7 @@ class StructuredChunker:
             pages = [u.page for u in units if u.page is not None]
             headings = list(dict.fromkeys(u.heading for u in units if u.heading))
             first = next(u for u in units if u.kind != "overlap")
+            path = first.path or next((u.path for u in body if u.path), ())
             chunks.append(
                 Chunk(
                     index=len(chunks),
@@ -183,7 +213,8 @@ class StructuredChunker:
                     page_start=min(pages) if pages else None,
                     page_end=max(pages) if pages else None,
                     section_heading=first.heading,
-                    metadata={"headings": headings, "kinds": sorted({u.kind for u in body}), "chunker": self.name},
+                    metadata={"headings": headings, "kinds": sorted({u.kind for u in body}), "chunker": self.name,
+                              **({"section_path": list(path)} if path else {})},
                 )
             )
 
@@ -201,14 +232,27 @@ class StructuredChunker:
             text = " ".join(picked)
             return [_Unit(text, count(text), last.page, last.heading, "overlap", picked)]
 
-        for item in self._units(segments):
-            if isinstance(item, Segment):  # a heading: close the chunk at the section boundary if it is big enough
-                if cur and count(text_of(cur)) >= cfg.min_tokens:
+        levels = [s.level for s in segments if s.kind == "heading" and s.level is not None]
+        title_level = min(levels) if levels and levels.count(min(levels)) == 1 else None
+
+        def root_level(units: list[_Unit]) -> int | None:
+            """Level of the section the chunk belongs to (None: no section yet, or an unlevelled heading)."""
+            for u in units:
+                if u.kind == "overlap":
+                    continue
+                if u.kind == "heading" and u.level is not None and u.level == title_level:
+                    continue  # the document title is not a section root; look at what follows
+                lvl = u.section_level
+                return None if lvl is None or lvl == title_level else lvl
+            return None
+
+        for unit in self._with_paths(segments):
+            if unit.kind == "heading" and cur and count(text_of(cur)) >= cfg.min_tokens:
+                root = root_level(cur)
+                subsection = unit.level is not None and root is not None and unit.level > root
+                if not subsection:  # sibling or higher section: close the chunk at the boundary
                     emit(cur)
                     cur = []
-                unit = _Unit(item.text, count(item.text), item.page, item.text, "heading")
-            else:
-                unit = item
             if cur and count(text_of(cur + [unit])) > cfg.chunk_size:
                 carry: list[_Unit] = []
                 while cur and cur[-1].kind == "heading":  # a heading belongs with the content after it

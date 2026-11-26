@@ -24,6 +24,9 @@ public final class StubAiServer {
 
     private static final HttpServer SERVER;
     public static final List<Recorded> CHAT_REQUESTS = new CopyOnWriteArrayList<>();
+    public static final List<Recorded> FETCH_REQUESTS = new CopyOnWriteArrayList<>();
+    private static volatile ChatScript fetchScript = ex -> respond(ex, 503, "application/problem+json",
+            "{\"status\":503,\"detail\":\"no script\"}");
     private static volatile ChatScript chatScript = ex -> respond(ex, 503, "application/problem+json",
             "{\"status\":503,\"detail\":\"no script\"}");
 
@@ -39,6 +42,15 @@ public final class StubAiServer {
             CHAT_REQUESTS.add(new Recorded(ex.getRequestHeaders().getFirst("X-Internal-Token"), body));
             try {
                 chatScript.handle(ex);
+            } finally {
+                ex.close();
+            }
+        });
+        SERVER.createContext("/internal/v1/fetch-url", ex -> {
+            String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            FETCH_REQUESTS.add(new Recorded(ex.getRequestHeaders().getFirst("X-Internal-Token"), body));
+            try {
+                fetchScript.handle(ex);
             } finally {
                 ex.close();
             }
@@ -59,6 +71,24 @@ public final class StubAiServer {
 
     public static void script(ChatScript script) {
         chatScript = script;
+    }
+
+    public static void scriptFetch(ChatScript script) {
+        fetchScript = script;
+    }
+
+    /** A successful fetch-url answer with the given content. */
+    public static ChatScript fetched(String url, String fileType, String contentType, String title, byte[] data) {
+        String b64 = java.util.Base64.getEncoder().encodeToString(data);
+        return ex -> respond(ex, 200, "application/json", "{\"url\":\"" + url + "\",\"fileType\":\"" + fileType
+                + "\",\"contentType\":\"" + contentType + "\",\"title\":\"" + title + "\",\"sizeBytes\":" + data.length
+                + ",\"data\":\"" + b64 + "\"}");
+    }
+
+    /** A fetch-url failure as the AI service reports it (problem+json with a stable code). */
+    public static ChatScript fetchFailed(String code, String detail) {
+        return ex -> respond(ex, 422, "application/problem+json",
+                "{\"status\":422,\"title\":\"" + code + "\",\"code\":\"" + code + "\",\"detail\":\"" + detail + "\"}");
     }
 
     public static void respond(HttpExchange ex, int status, String contentType, String body) throws IOException {

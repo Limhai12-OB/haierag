@@ -156,3 +156,58 @@ def test_big_table_split_repeats_header(token_counter):
 def test_config_validation():
     with pytest.raises(ValueError):
         ChunkingConfig(chunk_size=100, overlap=60)
+
+
+# ------------------------------------------------------------------ section-aware packing (structured-v2)
+def _h(text, level):
+    return Segment(text, kind="heading", heading=text, level=level)
+
+
+def _p(text):
+    return Segment(text)
+
+
+ITEM = "This item has a short description that is long enough to pass the minimum chunk size easily."
+
+
+def test_subsections_stay_with_their_section_and_siblings_split(token_counter):
+    segs = [_h("Portfolio of Sokha", 1), _p("Intro paragraph about the person. " * 3),
+            _h("Projects", 2), _h("Alpha", 3), _p(ITEM), _h("Beta", 3), _p(ITEM), _h("Gamma", 4), _p(ITEM),
+            _h("Interests", 2), _p(ITEM)]
+    chunks = _chunker(token_counter, size=300).chunk(segs)
+    projects = next(c for c in chunks if c.section_heading == "Projects")
+    assert all(name in projects.content for name in ("Alpha", "Beta", "Gamma"))
+    assert "Interests" not in projects.content
+    assert projects.metadata["section_path"] == ["Portfolio of Sokha", "Projects"]
+    interests = next(c for c in chunks if c.section_heading == "Interests")
+    assert "Alpha" not in interests.content
+
+
+def test_packed_sections_still_respect_the_size_limit(token_counter):
+    segs = [_h("Projects", 2)] + [x for i in range(12) for x in (_h(f"Project {i}", 3), _p(ITEM))]
+    chunks = _chunker(token_counter, size=120).chunk(segs)
+    assert len(chunks) > 1 and all(c.token_count <= 120 for c in chunks)
+    later = chunks[-1]
+    assert later.metadata["section_path"][0] == "Projects"  # split-off parts keep the parent in their path
+
+
+def test_repeated_top_level_headings_are_sections_not_a_title(token_counter):
+    segs = [_h("Chapter 1", 1), _p(ITEM), _h("Chapter 2", 1), _p(ITEM)]
+    chunks = _chunker(token_counter, size=300).chunk(segs)
+    assert [c.section_heading for c in chunks] == ["Chapter 1", "Chapter 2"]
+
+
+def test_unlevelled_headings_remain_boundaries(token_counter):
+    segs = [Segment("Part A", kind="heading", heading="Part A"), _p(ITEM),
+            Segment("Part B", kind="heading", heading="Part B"), _p(ITEM)]
+    chunks = _chunker(token_counter, size=300).chunk(segs)
+    assert [c.section_heading for c in chunks] == ["Part A", "Part B"]
+
+
+def test_embedding_input_uses_heading_path():
+    from app.chunking.structured import Chunk
+    from app.ingestion.pipeline import embedding_input
+
+    c = Chunk(0, "Gamma: 92 components", 5, None, None, "Gamma",
+              {"section_path": ["Projects", "More projects", "Gamma"]})
+    assert "Section: Projects › More projects › Gamma" in embedding_input("Portfolio", c)

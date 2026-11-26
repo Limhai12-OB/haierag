@@ -34,7 +34,10 @@ log = logging.getLogger(__name__)
 def embedding_input(document_name: str, chunk: Chunk) -> str:
     """Text actually embedded: a short context header improves retrieval of chunks that lack the document's topic."""
     header = f"Document: {document_name}"
-    if chunk.section_heading:
+    path = chunk.metadata.get("section_path") if chunk.metadata else None
+    if path:
+        header += "\nSection: " + " › ".join(path)
+    elif chunk.section_heading:
         header += f"\nSection: {chunk.section_heading}"
     return f"{header}\n\n{chunk.content}"
 

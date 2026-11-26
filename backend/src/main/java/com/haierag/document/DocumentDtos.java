@@ -13,7 +13,11 @@ public final class DocumentDtos {
     public record DocumentDto(UUID id, UUID workspaceId, UUID collectionId, String collectionName, String name,
                               String originalFilename, String contentType, String fileType, long sizeBytes,
                               String status, String errorMessage, Integer pageCount, int chunkCount,
-                              String uploadedBy, Instant processedAt, Instant createdAt, Instant updatedAt) {
+                              String uploadedBy, String sourceUrl, Instant processedAt, Instant createdAt,
+                              Instant updatedAt) {
+    }
+
+    public record ImportUrlRequest(String url, UUID collectionId) {
     }
 
     public record JobDto(UUID id, String status, String stage, int attempts, Instant startedAt, Instant finishedAt,

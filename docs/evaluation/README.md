@@ -13,7 +13,9 @@ Relevance = chunks of the expected document containing the expected phrase.
 
 Raw reports: [default config, with generation](results-default-generation.md) ·
 [200-token chunks, retrieval only](results-chunk200-retrieval.md) ·
-[Khmer/mixed re-run](results-km-mixed-generation-v2.md)
+[Khmer/mixed re-run](results-km-mixed-generation-v2.md) ·
+[section-aware chunking + contextual rerank, retrieval only (2026-11-26)](results-structured-v2-retrieval.md):
+same reranked scores (Hit@5 = MRR = 1.0), fused MRR 0.93 → 0.95, absent answers still 3/3 declined (ADR-019)
 
 ### Retrieval, K = 5 (answerable questions)
 | | Hit@5 fused | Hit@5 reranked | MRR fused | MRR reranked |

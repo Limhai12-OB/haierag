@@ -42,3 +42,15 @@ class DocumentParseError(HaieRagError):
 
 class UnsupportedDocumentError(DocumentParseError):
     code = "UNSUPPORTED_DOCUMENT"
+
+
+class UrlImportError(HaieRagError):
+    """A link could not be imported (blocked, unreachable, unsupported or too large). Shown to the user."""
+
+    code = "URL_FETCH_FAILED"
+    status_code = 422
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message)
+        if code:
+            self.code = code

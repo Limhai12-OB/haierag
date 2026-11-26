@@ -28,6 +28,7 @@ import com.haierag.auth.CurrentUser;
 import com.haierag.document.DocumentDtos.ChunkDto;
 import com.haierag.document.DocumentDtos.DocumentDto;
 import com.haierag.document.DocumentDtos.DocumentStatusInfo;
+import com.haierag.document.DocumentDtos.ImportUrlRequest;
 import com.haierag.document.DocumentDtos.PageDto;
 import com.haierag.document.DocumentDtos.StoredObject;
 import com.haierag.storage.StorageService;
@@ -50,6 +51,13 @@ public class DocumentController {
                                               @RequestParam(name = "collectionId", required = false) UUID collectionId,
                                               CurrentUser user) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(service.upload(workspaceId, file, collectionId, user));
+    }
+
+    @PostMapping(path = "/workspaces/{workspaceId}/documents/import-url", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DocumentDto> importUrl(@PathVariable UUID workspaceId, @RequestBody ImportUrlRequest body,
+                                                 CurrentUser user) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(service.importUrl(workspaceId, body.url(), body.collectionId(), user));
     }
 
     @GetMapping("/workspaces/{workspaceId}/documents")

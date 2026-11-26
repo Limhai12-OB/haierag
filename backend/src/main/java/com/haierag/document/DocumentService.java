@@ -26,12 +26,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.haierag.ai.AiClient;
+import com.haierag.ai.AiException;
 import com.haierag.audit.AuditService;
 import com.haierag.auth.CurrentUser;
 import com.haierag.collection.CollectionService;
 import com.haierag.common.AfterCommit;
 import com.haierag.common.ApiException;
 import com.haierag.common.Json;
+import com.haierag.common.RateLimiter;
 import com.haierag.config.AppProperties;
 import com.haierag.document.DocumentDtos.AdminJobDto;
 import com.haierag.document.DocumentDtos.ChunkDto;
@@ -58,7 +61,7 @@ public class DocumentService {
     private static final String SELECT = """
             select d.id, d.workspace_id, d.collection_id, c.name, d.name, d.original_filename, d.content_type,
                    d.file_type, d.size_bytes, d.status, d.error_message, d.page_count, d.chunk_count, d.uploaded_by,
-                   d.processed_at, d.created_at, d.updated_at
+                   d.processed_at, d.created_at, d.updated_at, d.source_url
             from documents d left join collections c on c.id = d.collection_id""";
 
     private final JdbcClient jdbc;
@@ -71,10 +74,12 @@ public class DocumentService {
     private final AppProperties props;
     private final TransactionTemplate tx;
     private final Json json;
+    private final AiClient ai;
+    private final RateLimiter rateLimiter;
 
     public DocumentService(JdbcClient jdbc, WorkspaceAccess access, CollectionService collections, FileValidator validator,
                            StorageService storage, IngestQueue queue, AuditService audit, AppProperties props,
-                           TransactionTemplate tx, Json json) {
+                           TransactionTemplate tx, Json json, AiClient ai, RateLimiter rateLimiter) {
         this.jdbc = jdbc;
         this.access = access;
         this.collections = collections;
@@ -85,6 +90,8 @@ public class DocumentService {
         this.props = props;
         this.tx = tx;
         this.json = json;
+        this.ai = ai;
+        this.rateLimiter = rateLimiter;
     }
 
     // ---------------------------------------------------------------- upload
@@ -120,34 +127,13 @@ public class DocumentService {
             FileType type = validator.validate(originalFilename, tmp);
 
             UUID documentId = UUID.randomUUID();
-            UUID versionId = UUID.randomUUID();
-            UUID jobId = UUID.randomUUID();
             String key = storageKey(workspaceId, documentId, 1, originalFilename);
             storage.put(key, tmp, type.contentType());
 
-            final long finalSize = size;
             try {
-                tx.executeWithoutResult(status -> {
-                    jdbc.sql("""
-                                    insert into documents (id, workspace_id, collection_id, name, original_filename, content_type,
-                                                           file_type, size_bytes, sha256, status, uploaded_by)
-                                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, 'QUEUED', ?)""")
-                            .params(documentId, workspaceId, collectionId, originalFilename, originalFilename,
-                                    type.contentType(), type.name(), finalSize, sha256, user.id())
-                            .update();
-                    jdbc.sql("""
-                                    insert into document_versions (id, document_id, version_number, storage_key, sha256,
-                                                                   size_bytes, content_type, created_by)
-                                    values (?, ?, 1, ?, ?, ?, ?, ?)""")
-                            .params(versionId, documentId, key, sha256, finalSize, type.contentType(), user.id())
-                            .update();
-                    jdbc.sql("update documents set current_version_id = ? where id = ?").params(versionId, documentId).update();
-                    jdbc.sql("insert into document_processing_jobs (id, document_id, version_id, status) values (?, ?, ?, 'QUEUED')")
-                            .params(jobId, documentId, versionId).update();
-                    audit.record(user.id(), workspaceId, "document.upload", "DOCUMENT", documentId,
-                            Map.of("name", originalFilename, "fileType", type.name(), "sizeBytes", finalSize));
-                    AfterCommit.run("enqueue ingestion job", () -> queue.push(jobId, documentId, versionId));
-                });
+                insertDocument(documentId, workspaceId, collectionId, originalFilename, originalFilename, type,
+                        type.contentType(), size, sha256, key, null, user, "document.upload",
+                        Map.of("name", originalFilename, "fileType", type.name(), "sizeBytes", size));
             } catch (RuntimeException e) {
                 safeDelete(List.of(key));
                 throw e;
@@ -164,6 +150,158 @@ public class DocumentService {
                 }
             }
         }
+    }
+
+    /** Inserts document, version 1 and the ingestion job in one transaction; enqueues the job after commit. */
+    private void insertDocument(UUID documentId, UUID workspaceId, UUID collectionId, String name, String originalFilename,
+                                FileType type, String contentType, long size, String sha256, String key, String sourceUrl,
+                                CurrentUser user, String auditAction, Map<String, Object> auditDetails) {
+        UUID versionId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+        tx.executeWithoutResult(status -> {
+            jdbc.sql("""
+                            insert into documents (id, workspace_id, collection_id, name, original_filename, content_type,
+                                                   file_type, size_bytes, sha256, status, uploaded_by, source_url)
+                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, 'QUEUED', ?, ?)""")
+                    .params(documentId, workspaceId, collectionId, name, originalFilename, contentType, type.name(), size,
+                            sha256, user.id(), sourceUrl)
+                    .update();
+            jdbc.sql("""
+                            insert into document_versions (id, document_id, version_number, storage_key, sha256,
+                                                           size_bytes, content_type, created_by)
+                            values (?, ?, 1, ?, ?, ?, ?, ?)""")
+                    .params(versionId, documentId, key, sha256, size, contentType, user.id())
+                    .update();
+            jdbc.sql("update documents set current_version_id = ? where id = ?").params(versionId, documentId).update();
+            jdbc.sql("insert into document_processing_jobs (id, document_id, version_id, status) values (?, ?, ?, 'QUEUED')")
+                    .params(jobId, documentId, versionId).update();
+            audit.record(user.id(), workspaceId, auditAction, "DOCUMENT", documentId, auditDetails);
+            AfterCommit.run("enqueue ingestion job", () -> queue.push(jobId, documentId, versionId));
+        });
+    }
+
+    // ---------------------------------------------------------------- link import (ADR-018)
+
+    private static final int IMPORTS_PER_MINUTE = 10;
+
+    /**
+     * Imports a web page or linked file. The AI service downloads it (SSRF rules, size and time limits); the
+     * result is stored and processed exactly like an upload, with the final URL kept as {@code source_url}.
+     */
+    public DocumentDto importUrl(UUID workspaceId, String rawUrl, UUID collectionId, CurrentUser user) {
+        access.require(workspaceId, user, Role.MEMBER);
+        String url = rawUrl == null ? "" : rawUrl.strip();
+        if (url.isEmpty()) {
+            throw ApiException.badField("url", "Enter a link to import");
+        }
+        if (url.length() > 2048) {
+            throw ApiException.badField("url", "The link is too long");
+        }
+        String lower = url.toLowerCase(java.util.Locale.ROOT);
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+            throw ApiException.badField("url", "Only http:// and https:// links can be imported");
+        }
+        if (collectionId != null && !collections.belongsTo(collectionId, workspaceId)) {
+            throw ApiException.badField("collectionId", "Collection not found in this workspace");
+        }
+        rateLimiter.check("import", user.id().toString(), IMPORTS_PER_MINUTE);
+
+        AiClient.FetchedUrl page;
+        try {
+            page = ai.fetchUrl(url, props.maxUploadBytes());
+        } catch (AiException e) {
+            throw importError(e);
+        }
+        FileType type;
+        try {
+            type = FileType.valueOf(page.fileType());
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badField("url", "This link points to an unsupported content type");
+        }
+        byte[] data = page.data();
+        if (data.length == 0) {
+            throw ApiException.badField("url", "The page is empty");
+        }
+        if (data.length > props.maxUploadBytes()) {
+            throw tooLarge();
+        }
+        String originalFilename = filenameForUrl(page.url(), type);
+        String name = displayName(page.title(), originalFilename);
+        String contentType = type == FileType.HTML ? "text/html" : type.contentType();
+
+        Path tmp = null;
+        try {
+            tmp = Files.createTempFile("haierag-import-", ".bin");
+            Files.write(tmp, data);
+            if (type != FileType.HTML) {
+                validator.validate(originalFilename, tmp); // the server's content type must match the content
+            }
+            String sha256 = HexFormat.of().formatHex(sha256Digest().digest(data));
+            UUID documentId = UUID.randomUUID();
+            String key = storageKey(workspaceId, documentId, 1, originalFilename);
+            storage.put(key, tmp, contentType);
+            try {
+                insertDocument(documentId, workspaceId, collectionId, name, originalFilename, type, contentType,
+                        data.length, sha256, key, page.url(), user, "document.import_url",
+                        Map.of("name", name, "fileType", type.name(), "sizeBytes", data.length, "url", page.url()));
+            } catch (RuntimeException e) {
+                safeDelete(List.of(key));
+                throw e;
+            }
+            return find(documentId);
+        } catch (IOException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store the imported content");
+        } finally {
+            if (tmp != null) {
+                try {
+                    Files.deleteIfExists(tmp);
+                } catch (IOException ignored) {
+                    // best effort
+                }
+            }
+        }
+    }
+
+    private ApiException importError(AiException e) {
+        return switch (e.getCode()) {
+            case "URL_TOO_LARGE" -> tooLarge();
+            case "URL_INVALID", "URL_BLOCKED", "URL_UNSUPPORTED", "URL_FETCH_FAILED" ->
+                    ApiException.badField("url", e.getMessage());
+            default -> new ApiException(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+        };
+    }
+
+    /** A readable file name with the right extension, e.g. {@code annual-report.pdf} or {@code example.com.html}. */
+    static String filenameForUrl(String url, FileType type) {
+        String ext = switch (type) {
+            case HTML -> "html";
+            case MARKDOWN -> "md";
+            default -> type.name().toLowerCase(java.util.Locale.ROOT);
+        };
+        String last = "";
+        String host = "page";
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            host = uri.getHost() == null ? host : uri.getHost();
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            last = path.substring(path.lastIndexOf('/') + 1);
+        } catch (IllegalArgumentException ignored) {
+            // keep defaults
+        }
+        String base = last.isBlank() ? host : last;
+        base = base.replaceAll("\\p{Cntrl}", "").trim();
+        if (!base.toLowerCase(java.util.Locale.ROOT).endsWith("." + ext)) {
+            base = base + "." + ext;
+        }
+        return base.length() > 255 ? base.substring(base.length() - 255) : base;
+    }
+
+    static String displayName(String title, String fallback) {
+        String t = title == null ? "" : title.replaceAll("\\p{Cntrl}", " ").replaceAll("\\s+", " ").strip();
+        if (t.isEmpty()) {
+            return fallback;
+        }
+        return t.length() > 255 ? t.substring(0, 254) + "…" : t;
     }
 
     static String storageKey(UUID workspaceId, UUID documentId, int version, String filename) {
@@ -396,7 +534,7 @@ public class DocumentService {
         return new DocumentDto(rs.getObject(1, UUID.class), rs.getObject(2, UUID.class), rs.getObject(3, UUID.class),
                 rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getLong(9),
                 rs.getString(10), rs.getString(11), (Integer) rs.getObject(12), rs.getInt(13),
-                uploadedBy == null ? null : uploadedBy.toString(), WorkspaceService.instant(rs, 15),
+                uploadedBy == null ? null : uploadedBy.toString(), rs.getString(18), WorkspaceService.instant(rs, 15),
                 WorkspaceService.instant(rs, 16), WorkspaceService.instant(rs, 17));
     }
 

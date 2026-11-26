@@ -10,7 +10,9 @@ public enum FileType {
     PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
     TXT("text/plain; charset=utf-8"),
     MARKDOWN("text/markdown; charset=utf-8"),
-    CSV("text/csv; charset=utf-8");
+    CSV("text/csv; charset=utf-8"),
+    /** Web pages imported from a link (never accepted as an upload; see {@link FileValidator}). */
+    HTML("text/html");
 
     private final String contentType;
 
@@ -23,7 +25,7 @@ public enum FileType {
     }
 
     public boolean isText() {
-        return this == TXT || this == MARKDOWN || this == CSV;
+        return this == TXT || this == MARKDOWN || this == CSV || this == HTML;
     }
 
     public static Optional<FileType> fromFilename(String filename) {

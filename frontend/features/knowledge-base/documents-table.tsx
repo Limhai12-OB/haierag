@@ -16,7 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoveCollectionDialog } from "@/features/documents/move-collection-dialog";
 import { useDocumentActions } from "@/features/documents/use-document-actions";
-import { formatBytes, formatRelative } from "@/lib/format";
+import { fileTypeLabel, formatBytes, formatRelative, safeExternalUrl, urlHost } from "@/lib/format";
 import type { Collection, Document } from "@/types/api";
 
 export function DocumentsTable({
@@ -58,8 +58,24 @@ export function DocumentsTable({
                     {d.name}
                   </Link>
                   <span className="text-xs text-muted-foreground">
-                    {d.fileType}
+                    {fileTypeLabel(d.fileType)}
                     {d.status === "COMPLETED" && ` · ${d.chunkCount} chunks`}
+                    {safeExternalUrl(d.sourceUrl) && (
+                      <>
+                        {" · "}
+                        <a
+                          href={safeExternalUrl(d.sourceUrl)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                          title={d.sourceUrl!}
+                        >
+                          {urlHost(d.sourceUrl!)}
+                          <ExternalLink className="ml-0.5 inline size-3 align-[-1px]" aria-hidden />
+                          <span className="sr-only"> (opens original page in a new tab)</span>
+                        </a>
+                      </>
+                    )}
                   </span>
                 </TableCell>
                 <TableCell className="hidden max-w-[10rem] truncate text-muted-foreground md:table-cell">

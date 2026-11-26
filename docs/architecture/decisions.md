@@ -134,3 +134,50 @@ Khmer" directive, and the forced-answer bridge says the same. Generation stops w
 repeated 8+ times; the stored answer keeps one copy and ends with "…".
 **Consequences:** Khmer questions get Khmer answers (names and numbers stay as in the sources). Wording quality is
 still limited by qwen3:4b's Khmer.
+
+## ADR-018 — Importing web pages and linked files (2026-11-25)
+
+**Context:** Users want to add knowledge from a link, not only from uploaded files. Fetching user-supplied URLs on
+the server is a classic SSRF risk: in this stack a link could otherwise reach Ollama (`host.docker.internal:11434`),
+Postgres, Redis, storage, the backend's actuator, or a cloud metadata endpoint.
+**Decision:**
+* The **AI service** downloads the link (`POST /internal/v1/fetch-url`, internal token); the **backend** then stores
+  and queues it exactly like an upload (same storage, validation, versions, reprocess, delete, audit
+  `document.import_url`). `documents.source_url` keeps the final URL; web pages get `file_type = 'HTML'` (V2).
+* SSRF rules: http/https only; no credentials in the URL; the host is resolved and **every** address must be
+  public (loopback, RFC 1918, link-local, CGNAT, ULA, multicast, reserved, IPv4-mapped/6to4 forms all refused);
+  the connection goes to the **validated IP** with Host header + TLS SNI/certificate verification on the hostname
+  (no DNS-rebinding window); redirects are followed manually (≤ 5) and each hop is re-validated; proxy env vars are
+  ignored; 20 s total, `MAX_UPLOAD_SIZE_MB` cap enforced while streaming; 10 imports/minute/user.
+  `URL_IMPORT_ALLOW_PRIVATE=true` disables the address check for intranet use on a trusted network.
+* Web pages: trafilatura extracts the main content as markdown (headings + tables kept, menus/footers/ads dropped),
+  wiki "[edit]" links and footnote markers ("[4]") are removed (they would be confused with HaieRag's [n]
+  citations), then the markdown parser builds sections. If the article extractor captures less than half of the
+  page's visible text (one-page sites: portfolios, landing/product pages — e.g. 7% on a real portfolio), a
+  structural full-page walk is used instead (`parsing/html_blocks.py`: all visible text in order, headings/lists/
+  tables kept; scripts, styles, nav, forms and hidden elements dropped). Pages with < 40 characters of text fail with a clear
+  message (JavaScript-rendered or login-only pages).
+**Consequences:** No JavaScript rendering and no authenticated sources (private Google Docs, Notion). Imports are
+snapshots: reprocess re-reads the stored copy; importing again creates a new document. The AI service needs
+outbound internet access for this feature only (models stay local).
+
+## ADR-019 — Section-aware chunking (structured-v2) and contextual reranking (2026-11-26)
+
+**Context:** "List all projects" on a one-page portfolio returned none of the project names. Each subsection
+had become its own ~100-token chunk. Chunks after the first did not
+contain the word "project". The cross-encoder saw only chunk text, so the Projects chunk scored below
+`RERANK_MIN_SCORE` for "projects in <name>'s portfolio": the person is named only in the document title.
+**Decision:**
+* Chunker `structured-v2`: a heading closes the current chunk only if it is a sibling or a higher-level section.
+  Deeper subsections are packed with their parent section up to `CHUNK_SIZE`. A level used once at the top (the
+  document title) is not a section root. Headings without a level (some PDFs) still always split, and slides and
+  sheets are siblings, so their behaviour is unchanged.
+* Each chunk stores its heading path (`metadata.section_path`, e.g. "Projects › More projects › Gamma"), and
+  the embedding header uses it.
+* Reranker input = `Document: <name>` + section heading + chunk text, matching the context the embedding gets.
+* Prompt rule: list/count questions must include every matching item from the sources. The forced-answer budget
+  went from 1024 to 1536 tokens, because Khmer lists need more tokens.
+**Consequences:** The portfolio's projects are now in one chunk, which ranks first, and all four are listed in English
+and in Khmer. On the benchmark ([results](../evaluation/results-structured-v2-retrieval.md)), Hit@5 and MRR after
+reranking stay 1.0, fused MRR rose from 0.93 to 0.95, and the 3 absent-answer questions are still declined.
+Existing documents keep their old chunks until reprocessed.

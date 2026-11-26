@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileQuestion, FolderInput, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileQuestion, FolderInput, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { hasRole, useWorkspaces } from "@/hooks/use-current-workspace";
 import { PageContainer } from "@/features/shell/workspace-boundary";
 import { ApiError } from "@/lib/api-client";
-import { formatBytes, formatDateTime, humanize } from "@/lib/format";
+import { fileTypeLabel, formatBytes, formatDateTime, humanize, safeExternalUrl } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { listCollections } from "@/services/collections";
 import { getDocument, getDocumentStatus, isInFlight } from "@/services/documents";
@@ -161,7 +161,7 @@ export function DocumentDetailView({ id }: { id: string }) {
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <Meta label="Type">{d.fileType}</Meta>
+              <Meta label="Type">{fileTypeLabel(d.fileType)}</Meta>
               <Meta label="Size">{formatBytes(d.sizeBytes)}</Meta>
               <Meta label="Collection">{d.collectionName ?? "—"}</Meta>
               <Meta label="Pages">{d.pageCount ?? "—"}</Meta>
@@ -171,6 +171,24 @@ export function DocumentDetailView({ id }: { id: string }) {
               <Meta label="Processed">{formatDateTime(d.processedAt)}</Meta>
               <Meta label="Updated">{formatDateTime(d.updatedAt)}</Meta>
             </dl>
+            {safeExternalUrl(d.sourceUrl) && (
+              <div className="mt-4 space-y-1 border-t pt-4 text-sm">
+                <p className="text-xs text-muted-foreground">Imported from</p>
+                <a
+                  href={safeExternalUrl(d.sourceUrl)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex max-w-full items-center gap-1 break-all font-medium hover:underline"
+                >
+                  {d.sourceUrl}
+                  <ExternalLink className="size-3.5 shrink-0" aria-hidden />
+                </a>
+                <p className="text-xs text-muted-foreground">
+                  The page was saved when it was imported. Reprocess re-reads that saved copy; import the link again to
+                  pick up changes to the page.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>

@@ -43,7 +43,8 @@ def create_app() -> FastAPI:
     @app.exception_handler(HaieRagError)
     async def _domain_error(_: Request, exc: HaieRagError):
         return JSONResponse(status_code=exc.status_code,
-                            content={"type": "about:blank", "title": exc.code, "status": exc.status_code, "detail": exc.message},
+                            content={"type": "about:blank", "title": exc.code, "code": exc.code, "status": exc.status_code,
+                                     "detail": exc.message},
                             media_type="application/problem+json")
 
     @app.exception_handler(RequestValidationError)

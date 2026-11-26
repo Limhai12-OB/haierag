@@ -79,6 +79,7 @@ extension **and** magic bytes / UTF-8 validity.
 | Method | Path | Body | Response | Min role |
 |---|---|---|---|---|
 | POST | `/workspaces/{workspaceId}/documents` | multipart: `file`, `collectionId?` | 202 `Document` (status QUEUED) | MEMBER |
+| POST | `/workspaces/{workspaceId}/documents/import-url` | `{url, collectionId?}` | 202 `Document` (QUEUED, `fileType` from the content, `sourceUrl` set) — see below | MEMBER |
 | GET | `/workspaces/{workspaceId}/documents?collectionId=&status=&q=` | – | `Document[]` (newest first) | VIEWER |
 | GET | `/documents/{id}` | – | `Document` | VIEWER |
 | PATCH | `/documents/{id}` | `{name?, collectionId?}` (`collectionId: null` removes) | `Document` | MEMBER |
@@ -88,12 +89,20 @@ extension **and** magic bytes / UTF-8 validity.
 | POST | `/documents/{id}/reprocess` | – | 202 `Document` | MEMBER |
 | DELETE | `/documents/{id}` | – | 204 (also deletes stored objects) | MEMBER |
 
+**Link import (ADR-018).** The backend asks the AI service to download the link (http/https only, public addresses
+only, ≤ 5 redirects each re-checked, 20 s, `MAX_UPLOAD_SIZE_MB`), then stores and processes it exactly like an
+upload. Web pages become `fileType: "HTML"` (main text only), linked files keep their type and are validated like
+uploads. `name` = page title, `originalFilename` derived from the URL. Errors: 400 `errors.url` with a readable
+reason (invalid, private/local address, unsupported content type, HTTP error, unreachable), 413 too large,
+415 content does not match its declared type, 429 more than 10 imports/minute, 503 AI service down. Reprocess
+re-reads the stored copy; import again to refresh.
+
 ```ts
 type DocumentStatus = "UPLOADED" | "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
 type Document = { id: string; workspaceId: string; collectionId: string | null; collectionName: string | null;
-  name: string; originalFilename: string; contentType: string; fileType: "PDF"|"DOCX"|"XLSX"|"PPTX"|"TXT"|"MARKDOWN"|"CSV";
+  name: string; originalFilename: string; contentType: string; fileType: "PDF"|"DOCX"|"XLSX"|"PPTX"|"TXT"|"MARKDOWN"|"CSV"|"HTML";
   sizeBytes: number; status: DocumentStatus; errorMessage: string | null; pageCount: number | null; chunkCount: number;
-  uploadedBy: string | null; processedAt: string | null; createdAt: string; updatedAt: string };
+  uploadedBy: string | null; sourceUrl: string | null; processedAt: string | null; createdAt: string; updatedAt: string };
 type DocumentStatusInfo = { documentId: string; status: DocumentStatus; errorMessage: string | null;
   job: { id: string; status: string; stage: string | null; attempts: number; startedAt: string | null;
          finishedAt: string | null; metrics: Record<string, unknown> } | null };
@@ -171,6 +180,7 @@ Fallback: `POST /internal/v1/ingest/jobs/{jobId}` enqueues the same message (use
 | POST | `/internal/v1/retrieve` | `RetrieveRequest` | `{passages: Passage[], timingsMs}` |
 | POST | `/internal/v1/chat` | `ChatRequest` | `text/event-stream` |
 | GET | `/internal/v1/config` | – | effective model/retrieval config |
+| POST | `/internal/v1/fetch-url` | `{url, maxBytes}` | `{url (final), fileType, contentType, title, sizeBytes, data (base64)}`; 422 problem with `code` URL_INVALID / URL_BLOCKED / URL_UNSUPPORTED / URL_TOO_LARGE / URL_FETCH_FAILED |
 
 ```ts
 type Scope = { workspaceId: string; collectionId?: string | null; documentIds?: string[] | null };

@@ -263,4 +263,10 @@ class RetrievalService:
 
     @staticmethod
     def _rerank_text(p: Passage) -> str:
-        return f"{p.section_heading}\n{p.content}" if p.section_heading and p.section_heading not in p.content[:200] else p.content
+        """Cross-encoder input with the same context the embedding had: document name and section. Without it a
+        chunk such as "Projects / Alpha / ..." scores low for "projects in Sokha's portfolio" because the
+        person/topic is named only in the document title."""
+        parts = [f"Document: {p.document_name}"]
+        if p.section_heading and p.section_heading not in p.content[:200]:
+            parts.append(p.section_heading)
+        return "\n".join(parts) + "\n\n" + p.content

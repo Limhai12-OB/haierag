@@ -1,7 +1,7 @@
 # HaieRag
 
-A self-hosted AI knowledge base with Retrieval-Augmented Generation. Upload documents into workspaces and
-collections, ask questions in English or Khmer, and get grounded answers with verifiable citations.
+A self-hosted AI knowledge base with Retrieval-Augmented Generation. Upload documents (or import web pages and
+linked files) into workspaces and collections, ask questions in English or Khmer, and get grounded answers with verifiable citations.
 **All inference is local** (Ollama + a local reranker); nothing is sent to cloud AI APIs.
 
 | Component | Tech | Responsibility |

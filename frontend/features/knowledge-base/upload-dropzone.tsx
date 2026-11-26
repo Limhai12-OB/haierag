@@ -1,17 +1,18 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, FileUp, Loader2, X, XCircle } from "lucide-react";
+import { CheckCircle2, FileUp, Link2, Loader2, X, XCircle } from "lucide-react";
 import { useCallback, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { errorMessage } from "@/lib/api-client";
+import { ApiError, errorMessage } from "@/lib/api-client";
 import { formatBytes } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { ACCEPT_ATTR, ALLOWED_EXTENSIONS, MAX_UPLOAD_MB, validateUploadFile } from "@/lib/upload-validation";
 import { cn } from "@/lib/utils";
-import { uploadDocument } from "@/services/documents";
+import { importDocumentUrl, uploadDocument } from "@/services/documents";
 import type { Collection } from "@/types/api";
 
 type UploadItem = {
@@ -30,9 +31,31 @@ type Props = {
   defaultCollectionId: string | null;
   /** Injected in tests. */
   upload?: typeof uploadDocument;
+  /** Injected in tests. */
+  importUrl?: typeof importDocumentUrl;
 };
 
-export function UploadDropzone({ workspaceId, collections, defaultCollectionId, upload = uploadDocument }: Props) {
+function isHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function importErrorMessage(err: unknown): string {
+  if (err instanceof ApiError && err.fieldErrors.url) return err.fieldErrors.url;
+  return errorMessage(err, "Import failed");
+}
+
+export function UploadDropzone({
+  workspaceId,
+  collections,
+  defaultCollectionId,
+  upload = uploadDocument,
+  importUrl = importDocumentUrl,
+}: Props) {
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -41,9 +64,19 @@ export function UploadDropzone({ workspaceId, collections, defaultCollectionId, 
   const collectionId =
     collectionChoice === null ? defaultCollectionId : collectionChoice === NONE ? null : collectionChoice;
   const selectId = useId();
+  const linkId = useId();
+  const [link, setLink] = useState("");
+  const [importing, setImporting] = useState(false);
 
   const update = (key: string, patch: Partial<UploadItem>) =>
     setItems((list) => list.map((i) => (i.key === key ? { ...i, ...patch } : i)));
+
+  const invalidateDocuments = useCallback(() => {
+    qc.invalidateQueries({ queryKey: qk.documents(workspaceId) });
+    qc.invalidateQueries({ queryKey: qk.collections(workspaceId) });
+    qc.invalidateQueries({ queryKey: qk.stats(workspaceId) });
+    qc.invalidateQueries({ queryKey: qk.activity(workspaceId) });
+  }, [qc, workspaceId]);
 
   const handleFiles = useCallback(
     async (fileList: FileList | File[]) => {
@@ -74,14 +107,50 @@ export function UploadDropzone({ workspaceId, collections, defaultCollectionId, 
       };
       if (queued.length) {
         await Promise.all([worker(), worker()]);
-        qc.invalidateQueries({ queryKey: qk.documents(workspaceId) });
-        qc.invalidateQueries({ queryKey: qk.collections(workspaceId) });
-        qc.invalidateQueries({ queryKey: qk.stats(workspaceId) });
-        qc.invalidateQueries({ queryKey: qk.activity(workspaceId) });
+        invalidateDocuments();
       }
     },
-    [upload, workspaceId, collectionId, qc],
+    [upload, workspaceId, collectionId, invalidateDocuments],
   );
+
+  const submitLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = link.trim();
+    if (!url || importing) return;
+    const key = `link-${Math.random().toString(36).slice(2)}`;
+    if (!isHttpUrl(url)) {
+      setItems((list) =>
+        [
+          {
+            key,
+            name: url,
+            size: 0,
+            state: "invalid" as const,
+            message: "Enter a full link starting with https:// or http://",
+          },
+          ...list,
+        ].slice(0, 30),
+      );
+      return;
+    }
+    setItems((list) => [{ key, name: url, size: 0, state: "uploading" as const }, ...list].slice(0, 30));
+    setImporting(true);
+    try {
+      const doc = await importUrl(workspaceId, url, collectionId);
+      setLink("");
+      update(key, {
+        state: "done",
+        name: doc.name || url,
+        size: doc.sizeBytes ?? 0,
+        message: "Downloaded · queued for processing",
+      });
+      invalidateDocuments();
+    } catch (err) {
+      update(key, { state: "error", message: importErrorMessage(err) });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   return (
     <section aria-label="Upload documents" className="grid gap-3">
@@ -153,6 +222,39 @@ export function UploadDropzone({ workspaceId, collections, defaultCollectionId, 
         />
       </div>
 
+      <form onSubmit={submitLink} aria-label="Import from link" className="grid gap-1.5">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Label htmlFor={linkId} className="sr-only">
+            Link to a web page or file
+          </Label>
+          <div className="relative flex-1">
+            <Link2
+              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              id={linkId}
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              placeholder="Or paste a link to a web page or file (https://…)"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="pl-8"
+              maxLength={2048}
+            />
+          </div>
+          <Button type="submit" variant="outline" disabled={!link.trim() || importing}>
+            {importing ? <Loader2 className="animate-spin" aria-hidden /> : <Link2 aria-hidden />}
+            Import link
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Public pages and files only. Pages behind a login, or that load their content with JavaScript, may import
+          empty.
+        </p>
+      </form>
+
       {items.length > 0 && (
         <div className="rounded-xl border">
           <div className="flex items-center justify-between border-b px-3 py-2">
@@ -186,7 +288,7 @@ export function UploadDropzone({ workspaceId, collections, defaultCollectionId, 
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(i.size)}</span>
+                {i.size > 0 && <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(i.size)}</span>}
                 {i.state !== "uploading" && (
                   <Button
                     variant="ghost"

@@ -57,3 +57,28 @@ export function pageLabel(start: number | null, end: number | null): string | nu
   if (start !== null && end !== null && end !== start) return `pp. ${start}–${end}`;
   return `p. ${start ?? end}`;
 }
+
+/** Human label for a document's file type ("HTML" documents are web pages imported from a link). */
+export function fileTypeLabel(fileType: string): string {
+  return fileType === "HTML" ? "Web page" : fileType;
+}
+
+/** Returns the URL only when it is http(s) — never render other schemes (e.g. javascript:) as links. */
+export function safeExternalUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Host name of a URL for compact display, e.g. "en.wikipedia.org". */
+export function urlHost(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
